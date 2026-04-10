@@ -1,0 +1,18 @@
+{
+  "/estoque": {
+    "target": "http://estoque-api:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/estoque": ""
+    }
+  },
+  "/faturamento": {
+    "target": "http://faturamento-api:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/faturamento": ""
+    }
+  }
+}

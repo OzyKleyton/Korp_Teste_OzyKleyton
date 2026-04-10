@@ -1,5 +1,2 @@
-# Ignore nested project repos
-estoque/
-faturamento/
-frontend/
-repo_git_status.txt
+# Root repository ignores
+frontend/node_modules/
