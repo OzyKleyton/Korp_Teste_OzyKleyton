@@ -9,14 +9,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/config"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/config/db"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/api/handler"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/api/router"
-	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/model/user"
+	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/model/produto"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/repository"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/service"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Run(host, port string) error {
@@ -41,18 +41,18 @@ func Run(host, port string) error {
 	db = db.WithContext(ctx)
 
 	if err := db.AutoMigrate(
-		&user.User{},
+		&produto.Produto{},
 	); err != nil {
 		return err
 	}
 
-	userRepo := repository.NewUserRepository(db)
+	produtoRepo := repository.NewProdutoRepository(db)
 
-	userService := service.NewUserService(userRepo)
+	produtoService := service.NewProdutoService(produtoRepo)
 
-	userHandler := handler.NewUserHandler(userService)
+	produtoHandler := handler.NewProdutoHandler(produtoService)
 
-	router.SetupRouter(app, userHandler.Routes())
+	router.SetupRouter(app, produtoHandler.Routes())
 
 	c := make(chan os.Signal, 1)
 	errc := make(chan error, 1)
@@ -61,7 +61,7 @@ func Run(host, port string) error {
 		<-c
 		fmt.Println("Gracefully shutting down...")
 		cancel()
-		errc <-app.Shutdown()
+		errc <- app.Shutdown()
 	}()
 
 	if err := app.Listen(address); err != nil {

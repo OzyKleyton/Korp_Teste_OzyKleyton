@@ -1,0 +1,79 @@
+package service
+
+import (
+	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/model"
+	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/model/produto"
+	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/repository"
+)
+
+type ProdutoService interface {
+	CreateProduto(produtoReq *produto.ProdutoReq) *model.Response
+	FindAllProdutos() *model.Response
+	UpdateProduto(id uint, produtoReq *produto.ProdutoReq) *model.Response
+	DeleteProduto(id uint) *model.Response
+}
+
+type ProdutoServiceImpl struct {
+	repo repository.ProdutoRepository
+}
+
+func NewProdutoService(repo repository.ProdutoRepository) ProdutoService {
+	return &ProdutoServiceImpl{
+		repo: repo,
+	}
+}
+
+func (ps *ProdutoServiceImpl) CreateProduto(produtoReq *produto.ProdutoReq) *model.Response {
+	produto := produtoReq.ToProduto()
+
+	createProduto, err := ps.repo.Create(produto)
+	if err != nil {
+		return model.NewErrorResponse(err, 500)
+	}
+
+	return model.NewSuccessResponse(createProduto.ToProdutoRes())
+}
+
+func (ps *ProdutoServiceImpl) FindAllProdutos() *model.Response {
+	produtos, err := ps.repo.FindAll()
+	if err != nil {
+		return model.NewErrorResponse(err, 404)
+	}
+
+	produtosResponse := []*produto.ProdutoRes{}
+	for _, u := range produtos {
+		produtosResponse = append(produtosResponse, u.ToProdutoRes())
+	}
+
+	return model.NewSuccessResponse(produtosResponse)
+}
+
+func (ps *ProdutoServiceImpl) UpdateProduto(id uint, produtoReq *produto.ProdutoReq) *model.Response {
+	produto, err := ps.repo.FindByID(id)
+	if err != nil {
+		return model.NewErrorResponse(err, 404)
+	}
+
+	produto.Codigo = produtoReq.Codigo
+	produto.Descricao = produtoReq.Descricao
+
+	updateProduto, err := ps.repo.Update(produto)
+	if err != nil {
+		return model.NewErrorResponse(err, 500)
+	}
+
+	return model.NewSuccessResponse(updateProduto.ToProdutoRes())
+}
+
+func (ps *ProdutoServiceImpl) DeleteProduto(id uint) *model.Response {
+	produtoID, err := ps.repo.FindByID(id)
+	if err != nil {
+		return model.NewErrorResponse(err, 404)
+	}
+	_, err = ps.repo.Delete(produtoID.ID)
+	if err != nil {
+		return model.NewErrorResponse(err, 500)
+	}
+
+	return model.NewSuccessResponse(nil)
+}
