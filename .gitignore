@@ -1,2 +1,3 @@
 # Root repository ignores
 frontend/node_modules/
+.env
