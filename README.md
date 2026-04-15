@@ -62,6 +62,9 @@ A partir da estrutura do repositório e das entregas implementadas, o projeto at
 - Componentização e serviços frontend organizados em `components/` e `services/`.
 - Uso de `Docker Compose` para orquestrar os serviços e bancos de dados.
 - Controlador de configuração com `.env.example` para facilitar o clone do repositório.
+- Indicador de processamento na impressão de nota fiscal.
+- Tratamento de erro no backend e feedback visual via toast no frontend quando o serviço de estoque falhar ou não houver saldo suficiente.
+- Concurrency control no estoque: saída de produtos em transação com bloqueio `SELECT FOR UPDATE`.
 
 > Observação: não há um documento de requisitos formal dentro do repositório, então esta verificação foi feita com base nas funcionalidades implementadas e nas APIs existentes.
 
@@ -81,7 +84,9 @@ A partir da estrutura do repositório e das entregas implementadas, o projeto at
    - Impressão da nota e débito automático do estoque.
 4. Detalhe técnico:
    - Frontend com Angular 21, standalone components e `provideRouter`.
-   - Serviços reativos usando `signal` e stores para `produtos` e `notas`.
+   - Uso de RxJS no frontend para chamadas HTTP e `firstValueFrom` no carregamento de configuração.
+   - Gerenciamento de estado com `signal` e stores reativos para `produtos` e `notas`.
+   - O projeto não usa `OnInit` explicitamente; o carregamento inicial de dados é feito via serviços e signals.
    - Backend em Go com Fiber, GORM e Viper.
    - Docker Compose para levantar frontend, APIs e bancos.
    - `.env.example` como guia para configuração local.

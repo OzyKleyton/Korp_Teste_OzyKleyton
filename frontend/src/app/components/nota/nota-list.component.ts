@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { finalize } from 'rxjs/operators';
 
 import { NotaStoreService } from '../../services/nota-store.service';
 import { ToastService } from '../../services/toast.service';
@@ -44,10 +45,10 @@ import { ToastService } from '../../services/toast.service';
               <td class="px-4 py-4">
                 <button
                   (click)="imprimirNota(nota.id)"
-                  [disabled]="nota.status !== 'Aberta'"
+                  [disabled]="nota.status !== 'Aberta' || processingId === nota.id"
                   class="rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 bg-[#d91c4d] text-white hover:bg-[#ae173d]"
                 >
-                  Imprimir
+                  {{ processingId === nota.id ? 'Imprimindo...' : 'Imprimir' }}
                 </button>
               </td>
             </tr>
@@ -63,6 +64,8 @@ import { ToastService } from '../../services/toast.service';
   `,
 })
 export class NotaListComponent {
+  processingId = 0;
+
   constructor(
     private notaStore: NotaStoreService,
     private toast: ToastService,
@@ -73,14 +76,17 @@ export class NotaListComponent {
   }
 
   imprimirNota(id: number) {
-    this.notaStore.imprimirNota(id).subscribe({
-      next: () => {
-        this.toast.success('Nota impressa e estoque atualizado com sucesso.');
-        this.notaStore.loadNotas();
-      },
-      error: () => {
-        this.toast.error('Erro ao imprimir a nota. Verifique se o estoque tem saldo suficiente.');
-      },
-    });
+    this.processingId = id;
+    this.notaStore.imprimirNota(id)
+      .pipe(finalize(() => (this.processingId = 0)))
+      .subscribe({
+        next: () => {
+          this.toast.success('Nota impressa e estoque atualizado com sucesso.');
+          this.notaStore.loadNotas();
+        },
+        error: () => {
+          this.toast.error('Erro ao imprimir a nota. Verifique se o estoque tem saldo suficiente.');
+        },
+      });
   }
 }
