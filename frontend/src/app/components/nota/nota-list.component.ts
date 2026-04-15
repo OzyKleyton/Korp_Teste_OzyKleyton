@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { finalize } from 'rxjs/operators';
+import { LoadingBarModule, LoadingBarService } from '@ngx-loading-bar/core';
 
 import { NotaStoreService } from '../../services/nota-store.service';
 import { ToastService } from '../../services/toast.service';
@@ -8,13 +9,21 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'nota-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LoadingBarModule],
   template: `
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <h3 class="text-xl font-semibold text-slate-900">Notas fiscais</h3>
       <p class="mt-2 text-sm text-slate-600">
         Confira as notas criadas e emita a nota para atualizar o estoque.
       </p>
+
+      <ngx-loading-bar
+        *ngIf="processingId !== 0"
+        [includeSpinner]="true"
+        color="#d91c4d"
+        height="4px"
+        class="mb-4"
+      ></ngx-loading-bar>
 
       <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
         <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -69,6 +78,7 @@ export class NotaListComponent {
   constructor(
     private notaStore: NotaStoreService,
     private toast: ToastService,
+    private loadingBar: LoadingBarService,
   ) {}
 
   get notas() {
@@ -77,8 +87,14 @@ export class NotaListComponent {
 
   imprimirNota(id: number) {
     this.processingId = id;
-    this.notaStore.imprimirNota(id)
-      .pipe(finalize(() => (this.processingId = 0)))
+    this.loadingBar.start();
+
+    this.notaStore
+      .imprimirNota(id)
+      .pipe(finalize(() => {
+        this.processingId = 0;
+        this.loadingBar.complete();
+      }))
       .subscribe({
         next: () => {
           this.toast.success('Nota impressa e estoque atualizado com sucesso.');
