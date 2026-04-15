@@ -9,14 +9,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/config"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/config/db"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/api/handler"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/api/router"
-	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/model/user"
+	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/model/nota"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/repository"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/service"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Run(host, port string) error {
@@ -41,18 +41,18 @@ func Run(host, port string) error {
 	db = db.WithContext(ctx)
 
 	if err := db.AutoMigrate(
-		&user.User{},
+		&nota.NotaFiscal{},
+		&nota.ItemNota{},
 	); err != nil {
 		return err
 	}
 
-	userRepo := repository.NewUserRepository(db)
+	notaRepo := repository.NewNotaFiscalRepository(db)
 
-	userService := service.NewUserService(userRepo)
+	notaService := service.NewNotaFiscalService(notaRepo)
+	notaHandler := handler.NewNotaHandler(notaService)
 
-	userHandler := handler.NewUserHandler(userService)
-
-	router.SetupRouter(app, userHandler.Routes())
+	router.SetupRouter(app, notaHandler.Routes())
 
 	c := make(chan os.Signal, 1)
 	errc := make(chan error, 1)
@@ -61,7 +61,7 @@ func Run(host, port string) error {
 		<-c
 		fmt.Println("Gracefully shutting down...")
 		cancel()
-		errc <-app.Shutdown()
+		errc <- app.Shutdown()
 	}()
 
 	if err := app.Listen(address); err != nil {

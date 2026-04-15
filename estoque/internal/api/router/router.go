@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 )
@@ -9,6 +10,12 @@ import (
 type Router func(route fiber.Router)
 
 func SetupRouter(app *fiber.App, routes ...Router) {
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "GET,HEAD,PUT,POST,DELETE,OPTIONS",
+		AllowHeaders: "*",
+	}))
 
 	app.Use(logger.New(logger.Config{
 		Format: "${time} | ${status} | ${latency} | ${remote} | ${method} | ${path}\n",

@@ -27,6 +27,7 @@ func (ph *ProdutoHandler) Routes() router.Router {
 		user.Get("/", ph.FindAllProdutosHandler)
 		user.Put("/:id", ph.UpdateProdutoHandler)
 		user.Delete("/:id", ph.DeleteProdutoHandler)
+		user.Post("/saida", ph.SaidaProdutosHandler)
 	}
 }
 
@@ -64,6 +65,19 @@ func (ph *ProdutoHandler) DeleteProdutoHandler(c *fiber.Ctx) error {
 	produtoID, _ := strconv.Atoi(c.Params("id", "0"))
 
 	res := ph.service.DeleteProduto(uint(produtoID))
+
+	return c.Status(res.Status).JSON(res)
+}
+
+func (ph *ProdutoHandler) SaidaProdutosHandler(c *fiber.Ctx) error {
+	req := struct {
+		Items []produto.ProdutoSaidaItem `json:"items"`
+	}{}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.NewErrorResponse(err, fiber.ErrBadRequest))
+	}
+
+	res := ph.service.ProcessSaida(req.Items)
 
 	return c.Status(res.Status).JSON(res)
 }

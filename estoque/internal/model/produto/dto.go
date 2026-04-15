@@ -13,6 +13,11 @@ type ProdutoRes struct {
 	Saldo     int64  `json:"saldo"`
 }
 
+type ProdutoSaidaItem struct {
+	ProdutoID  uint  `json:"produto_id"`
+	Quantidade int64 `json:"quantidade"`
+}
+
 func (u *ProdutoReq) ToProduto() *Produto {
 	return &Produto{
 		Codigo:    u.Codigo,

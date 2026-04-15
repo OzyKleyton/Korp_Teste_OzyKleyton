@@ -1,8 +1,11 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/model/produto"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ProdutoRepository interface {
@@ -11,6 +14,7 @@ type ProdutoRepository interface {
 	FindByID(id uint) (produto *produto.Produto, err error)
 	Update(produto *produto.Produto) (*produto.Produto, error)
 	Delete(id uint) (produto *produto.Produto, err error)
+	ProcessSaida(itens []produto.ProdutoSaidaItem) ([]produto.Produto, error)
 }
 
 type ProdutoRepo struct {
@@ -61,4 +65,39 @@ func (p *ProdutoRepo) Delete(id uint) (produto *produto.Produto, err error) {
 	}
 
 	return produto, nil
+}
+
+func (p *ProdutoRepo) ProcessSaida(itens []produto.ProdutoSaidaItem) ([]produto.Produto, error) {
+	tx := p.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	produtos := []produto.Produto{}
+	for _, item := range itens {
+		var prod produto.Produto
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&prod, "id = ?", item.ProdutoID).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		if prod.Saldo < item.Quantidade {
+			tx.Rollback()
+			return nil, fmt.Errorf("produto %d saldo insuficiente", item.ProdutoID)
+		}
+
+		prod.Saldo -= item.Quantidade
+		if err := tx.Save(&prod).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		produtos = append(produtos, prod)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return produtos, nil
 }

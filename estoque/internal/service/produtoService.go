@@ -11,6 +11,7 @@ type ProdutoService interface {
 	FindAllProdutos() *model.Response
 	UpdateProduto(id uint, produtoReq *produto.ProdutoReq) *model.Response
 	DeleteProduto(id uint) *model.Response
+	ProcessSaida(itens []produto.ProdutoSaidaItem) *model.Response
 }
 
 type ProdutoServiceImpl struct {
@@ -56,6 +57,7 @@ func (ps *ProdutoServiceImpl) UpdateProduto(id uint, produtoReq *produto.Produto
 
 	produto.Codigo = produtoReq.Codigo
 	produto.Descricao = produtoReq.Descricao
+	produto.Saldo = produtoReq.Saldo
 
 	updateProduto, err := ps.repo.Update(produto)
 	if err != nil {
@@ -76,4 +78,18 @@ func (ps *ProdutoServiceImpl) DeleteProduto(id uint) *model.Response {
 	}
 
 	return model.NewSuccessResponse(nil)
+}
+
+func (ps *ProdutoServiceImpl) ProcessSaida(itens []produto.ProdutoSaidaItem) *model.Response {
+	produtos, err := ps.repo.ProcessSaida(itens)
+	if err != nil {
+		return model.NewErrorResponse(err, 400)
+	}
+
+	produtosResponse := []*produto.ProdutoRes{}
+	for _, p := range produtos {
+		produtosResponse = append(produtosResponse, p.ToProdutoRes())
+	}
+
+	return model.NewSuccessResponse(produtosResponse)
 }

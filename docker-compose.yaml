@@ -3,10 +3,12 @@ services:
     build:
       context: ./estoque
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=PRODUCTION
+      - ENVIRONMENT=${ENVIRONMENT}
       - PORT=8000
-      - DATABASE_URL=postgres://postgres:example@estoque-db:5432/postgres
+      - DATABASE_URL=${DATABASE_URL_ESTOQUE}
     depends_on:
       - estoque-db
     networks:
@@ -26,10 +28,13 @@ services:
     build:
       context: ./faturamento
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=PRODUCTION
+      - ENVIRONMENT=${ENVIRONMENT}
       - PORT=8000
-      - DATABASE_URL=postgres://postgres:example@faturamento-db:5432/postgres
+      - DATABASE_URL=${DATABASE_URL_FATURAMENTO}
+      - ESTOQUE_URL=${ESTOQUE_URL}
     depends_on:
       - faturamento-db
     networks:
@@ -54,8 +59,10 @@ services:
     ports:
       - '4200:4200'
     command: sh -c "npm install && npm start -- --host 0.0.0.0 --proxy-config proxy.conf.json"
+    env_file:
+      - .env
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_USEPOLLING=${FRONTEND_CHOKIDAR_USEPOLLING}
     depends_on:
       - estoque-api
       - faturamento-api
