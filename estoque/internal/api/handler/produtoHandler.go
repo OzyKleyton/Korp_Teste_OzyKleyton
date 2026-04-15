@@ -43,7 +43,10 @@ func (ph *ProdutoHandler) CreateProdutoHandler(c *fiber.Ctx) error {
 }
 
 func (ph *ProdutoHandler) FindAllProdutosHandler(c *fiber.Ctx) error {
-	res := ph.service.FindAllProdutos()
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
+	res := ph.service.FindAllProdutos(page, limit)
 
 	return c.Status(res.Status).JSON(res)
 }

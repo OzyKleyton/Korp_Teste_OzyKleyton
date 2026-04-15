@@ -9,7 +9,7 @@ import (
 
 type NotaFiscalRepository interface {
 	Create(nota *nota.NotaFiscal) (*nota.NotaFiscal, error)
-	FindAll() ([]nota.NotaFiscal, error)
+	FindAll(page, limit int) ([]nota.NotaFiscal, int64, error)
 	FindByID(id uint) (*nota.NotaFiscal, error)
 	Update(nota *nota.NotaFiscal) (*nota.NotaFiscal, error)
 	GetLastNumeroSequencial() (int64, error)
@@ -33,13 +33,28 @@ func (r *NotaFiscalRepo) Create(nota *nota.NotaFiscal) (*nota.NotaFiscal, error)
 	return nota, nil
 }
 
-func (r *NotaFiscalRepo) FindAll() ([]nota.NotaFiscal, error) {
+func (r *NotaFiscalRepo) FindAll(page, limit int) ([]nota.NotaFiscal, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
 	notas := []nota.NotaFiscal{}
-	if err := r.db.Preload("Itens").Find(&notas).Error; err != nil {
-		return nil, err
+	query := r.db.Model(&nota.NotaFiscal{}).Preload("Itens")
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return notas, nil
+	if err := query.Limit(limit).Offset(offset).Find(&notas).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return notas, total, nil
 }
 
 func (r *NotaFiscalRepo) FindByID(id uint) (*nota.NotaFiscal, error) {

@@ -8,7 +8,7 @@ import (
 
 type ProdutoService interface {
 	CreateProduto(produtoReq *produto.ProdutoReq) *model.Response
-	FindAllProdutos() *model.Response
+	FindAllProdutos(page, limit int) *model.Response
 	UpdateProduto(id uint, produtoReq *produto.ProdutoReq) *model.Response
 	DeleteProduto(id uint) *model.Response
 	ProcessSaida(itens []produto.ProdutoSaidaItem) *model.Response
@@ -35,18 +35,18 @@ func (ps *ProdutoServiceImpl) CreateProduto(produtoReq *produto.ProdutoReq) *mod
 	return model.NewSuccessResponse(createProduto.ToProdutoRes())
 }
 
-func (ps *ProdutoServiceImpl) FindAllProdutos() *model.Response {
-	produtos, err := ps.repo.FindAll()
+func (ps *ProdutoServiceImpl) FindAllProdutos(page, limit int) *model.Response {
+	produtos, total, err := ps.repo.FindAll(page, limit)
 	if err != nil {
 		return model.NewErrorResponse(err, 404)
 	}
 
-	produtosResponse := []*produto.ProdutoRes{}
+	produtosResponse := make([]*produto.ProdutoRes, 0, len(produtos))
 	for _, u := range produtos {
 		produtosResponse = append(produtosResponse, u.ToProdutoRes())
 	}
 
-	return model.NewSuccessResponse(produtosResponse)
+	return model.NewSuccessResponse(model.NewPaginationData(produtosResponse, total))
 }
 
 func (ps *ProdutoServiceImpl) UpdateProduto(id uint, produtoReq *produto.ProdutoReq) *model.Response {

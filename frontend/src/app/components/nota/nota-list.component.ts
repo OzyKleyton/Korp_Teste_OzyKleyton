@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { finalize } from 'rxjs/operators';
 import { LoadingBarModule, LoadingBarService } from '@ngx-loading-bar/core';
+import { finalize } from 'rxjs/operators';
 
 import { NotaStoreService } from '../../services/nota-store.service';
 import { ToastService } from '../../services/toast.service';
@@ -69,6 +69,30 @@ import { ToastService } from '../../services/toast.service';
           </tbody>
         </table>
       </div>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-slate-600">
+          Mostrando {{ notas().length }} de {{ totalItems }} notas fiscais
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            [disabled]="page === 1"
+            (click)="notaStore.prevPage()"
+          >
+            Anterior
+          </button>
+          <span class="text-sm text-slate-600">Página {{ page }} de {{ totalPages }}</span>
+          <button
+            type="button"
+            class="rounded-full bg-[#d91c4d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ae173d] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            [disabled]="page >= totalPages"
+            (click)="notaStore.nextPage()"
+          >
+            Próxima
+          </button>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -76,10 +100,22 @@ export class NotaListComponent {
   processingId = 0;
 
   constructor(
-    private notaStore: NotaStoreService,
+    public notaStore: NotaStoreService,
     private toast: ToastService,
     private loadingBar: LoadingBarService,
   ) {}
+
+  get page() {
+    return this.notaStore.currentPage();
+  }
+
+  get totalPages() {
+    return this.notaStore.totalPages;
+  }
+
+  get totalItems() {
+    return this.notaStore.totalItems();
+  }
 
   get notas() {
     return this.notaStore.notas;
@@ -91,10 +127,12 @@ export class NotaListComponent {
 
     this.notaStore
       .imprimirNota(id)
-      .pipe(finalize(() => {
-        this.processingId = 0;
-        this.loadingBar.complete();
-      }))
+      .pipe(
+        finalize(() => {
+          this.processingId = 0;
+          this.loadingBar.complete();
+        }),
+      )
       .subscribe({
         next: () => {
           this.toast.success('Nota impressa e estoque atualizado com sucesso.');

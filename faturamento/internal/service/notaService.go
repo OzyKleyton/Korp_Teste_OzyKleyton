@@ -16,7 +16,7 @@ import (
 
 type NotaFiscalService interface {
 	CreateNotaFiscal(notaReq *nota.NotaFiscalReq) *model.Response
-	FindAllNotas() *model.Response
+	FindAllNotas(page, limit int) *model.Response
 	FindNotaByID(id uint) *model.Response
 	ImprimirNota(id uint) *model.Response
 }
@@ -58,8 +58,8 @@ func (ns *NotaFiscalServiceImpl) CreateNotaFiscal(notaReq *nota.NotaFiscalReq) *
 	return model.NewSuccessResponse(createNota.ToNotaFiscalRes())
 }
 
-func (ns *NotaFiscalServiceImpl) FindAllNotas() *model.Response {
-	notas, err := ns.repo.FindAll()
+func (ns *NotaFiscalServiceImpl) FindAllNotas(page, limit int) *model.Response {
+	notas, total, err := ns.repo.FindAll(page, limit)
 	if err != nil {
 		return model.NewErrorResponse(err, 500)
 	}
@@ -69,7 +69,7 @@ func (ns *NotaFiscalServiceImpl) FindAllNotas() *model.Response {
 		notasResponse = append(notasResponse, n.ToNotaFiscalRes())
 	}
 
-	return model.NewSuccessResponse(notasResponse)
+	return model.NewSuccessResponse(model.NewPaginationData(notasResponse, total))
 }
 
 func (ns *NotaFiscalServiceImpl) FindNotaByID(id uint) *model.Response {

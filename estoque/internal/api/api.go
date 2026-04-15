@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/config"
@@ -17,6 +18,7 @@ import (
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/repository"
 	"github.com/OzyKleyton/Korp_Teste_OzyKleyton/internal/service"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func Run(host, port string) error {
@@ -30,7 +32,7 @@ func Run(host, port string) error {
 		ProxyHeader: fiber.HeaderXForwardedFor,
 	})
 
-	db, err := db.ConnectDB(config.GetConfig().DBURL)
+	database, err := db.ConnectDB(config.GetConfig().DBURL)
 	if err != nil {
 		return err
 	}
@@ -38,15 +40,19 @@ func Run(host, port string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	db = db.WithContext(ctx)
+	database = database.WithContext(ctx)
 
-	if err := db.AutoMigrate(
+	if err := database.AutoMigrate(
 		&produto.Produto{},
 	); err != nil {
 		return err
 	}
 
-	produtoRepo := repository.NewProdutoRepository(db)
+	if err := seedProdutos(database, config.GetConfig().Environment); err != nil {
+		return err
+	}
+
+	produtoRepo := repository.NewProdutoRepository(database)
 
 	produtoService := service.NewProdutoService(produtoRepo)
 
@@ -71,4 +77,33 @@ func Run(host, port string) error {
 	err = <-errc
 
 	return err
+}
+
+func seedProdutos(database *gorm.DB, environment string) error {
+	env := strings.TrimSpace(strings.ToUpper(environment))
+	sampleProdutos := []produto.Produto{
+		{Codigo: "P001", Descricao: "Caneta azul", Saldo: 100},
+		{Codigo: "P002", Descricao: "Caderno 100 folhas", Saldo: 50},
+		{Codigo: "P003", Descricao: "Lápis HB", Saldo: 200},
+	}
+
+	if env == "" || env == "DEVELOPMENT" || env == "DEV" {
+		log.Println("Dev seed: limpando produtos existentes e inserindo dados iniciais")
+		if err := database.Unscoped().Where("1 = 1").Delete(&produto.Produto{}).Error; err != nil {
+			return err
+		}
+		return database.Create(&sampleProdutos).Error
+	}
+
+	var count int64
+	if err := database.Model(&produto.Produto{}).Count(&count).Error; err != nil {
+		return err
+	}
+	if count == 0 {
+		log.Println("Prod seed: nenhum produto encontrado, inserindo dados iniciais sem deletar")
+		return database.Create(&sampleProdutos).Error
+	}
+
+	log.Println("Prod seed: produtos já existem, mantendo dados atuais")
+	return nil
 }

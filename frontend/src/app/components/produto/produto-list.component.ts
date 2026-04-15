@@ -36,11 +36,51 @@ import { ProdutoStoreService } from '../../services/produto-store.service';
           </tbody>
         </table>
       </div>
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-slate-600">
+          Mostrando {{ produtos().length }} de {{ totalItems }} produtos
+        </p>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            [disabled]="page === 1"
+            (click)="store.prevPage()"
+          >
+            Anterior
+          </button>
+          <span class="text-sm text-slate-600">Página {{ page }} de {{ totalPages }}</span>
+          <button
+            type="button"
+            class="rounded-full bg-[#d91c4d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#ae173d] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            [disabled]="page >= totalPages"
+            (click)="store.nextPage()"
+          >
+            Próxima
+          </button>
+        </div>
+      </div>
     </div>
   `,
 })
 export class ProdutoListComponent {
   constructor(public store: ProdutoStoreService) {}
+
+  get page() {
+    return this.store.currentPage();
+  }
+
+  get totalPages() {
+    return this.store.totalPages;
+  }
+
+  get totalItems() {
+    return this.store.totalItems();
+  }
+
+  get pageSize() {
+    return this.store.pageSize;
+  }
 
   get produtos() {
     return this.store.produtos;

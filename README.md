@@ -14,6 +14,8 @@ No diretório raiz do repositório execute:
 bash run.sh
 ```
 
+> Para desenvolvimento local, garanta que `ENVIRONMENT=DEVELOPMENT` esteja definido em `.env` na raiz do projeto. Isso ativa o seed de produtos de exemplo, limpa o estoque e também limpa as notas fiscais ao subir a aplicação.
+
 Depois, abra no navegador:
 
 ```bash
@@ -25,7 +27,7 @@ http://localhost:4200
 ### Estoque
 
 - `POST /api/v1/produtos/` - cadastra produto com saldo
-- `GET /api/v1/produtos/` - lista produtos
+- `GET /api/v1/produtos/?page=1&limit=10` - lista produtos com paginação
 - `PUT /api/v1/produtos/:id` - atualiza produto e saldo
 - `DELETE /api/v1/produtos/:id` - remove produto
 - `POST /api/v1/produtos/saida` - processa saída de estoque por itens
@@ -33,7 +35,7 @@ http://localhost:4200
 ### Faturamento
 
 - `POST /api/v1/notas/` - cria nota fiscal Aberta
-- `GET /api/v1/notas/` - lista notas fiscais
+- `GET /api/v1/notas/?page=1&limit=10` - lista notas fiscais com paginação
 - `GET /api/v1/notas/:id` - consulta nota fiscal
 - `POST /api/v1/notas/:id/imprimir` - imprime nota fiscal e fecha a nota
 
@@ -63,41 +65,18 @@ A partir da estrutura do repositório e das entregas implementadas, o projeto at
 - Uso de `Docker Compose` para orquestrar os serviços e bancos de dados.
 - Controlador de configuração com `.env.example` para facilitar o clone do repositório.
 - Indicador de processamento na impressão de nota fiscal.
+- Paginação de produtos e notas no frontend com suporte a `page` e `limit` no backend.
 - Tratamento de erro no backend e feedback visual via toast no frontend quando o serviço de estoque falhar ou não houver saldo suficiente.
 - Concurrency control no estoque: saída de produtos em transação com bloqueio `SELECT FOR UPDATE`.
 
+## Detalhamento técnico
+
+- Frontend em Angular 21 com componentes standalone e `provideRouter`.
+- Uso de `signal` e uma camada de stores reativas para gerenciamento de estado de produtos e notas.
+- API do frontend centraliza chamadas HTTP em `frontend/src/app/services/`.
+- Backend em Go usando Fiber, GORM e Viper para configuração e persistência.
+- Integridade transacional no estoque via `POST /api/v1/produtos/saida` durante a impressão de nota.
+- Docker Compose orquestra frontend, APIs e bancos de dados PostgreSQL.
+- `.env.example` fornece um template de configuração local sem expor segredos.
+
 > Observação: não há um documento de requisitos formal dentro do repositório, então esta verificação foi feita com base nas funcionalidades implementadas e nas APIs existentes.
-
-## Roteiro técnico para o vídeo
-
-1. Apresentação rápida do projeto:
-   - `estoque`: API Go para gerenciamento de produtos e saldo.
-   - `faturamento`: API Go para emissão de notas fiscais.
-   - `frontend`: aplicação Angular que consome as duas APIs.
-2. Explique a arquitetura:
-   - Microsserviços independentes.
-   - Banco PostgreSQL para persistência.
-   - Comunicação HTTP entre `faturamento` e `estoque`.
-3. Mostre o front:
-   - Cadastro de produto e visualização de estoque.
-   - Criação de nota fiscal com itens.
-   - Impressão da nota e débito automático do estoque.
-4. Detalhe técnico:
-   - Frontend com Angular 21, standalone components e `provideRouter`.
-   - Uso de RxJS no frontend para chamadas HTTP e `firstValueFrom` no carregamento de configuração.
-   - Gerenciamento de estado com `signal` e stores reativos para `produtos` e `notas`.
-   - O projeto não usa `OnInit` explicitamente; o carregamento inicial de dados é feito via serviços e signals.
-   - Backend em Go com Fiber, GORM e Viper.
-   - Docker Compose para levantar frontend, APIs e bancos.
-   - `.env.example` como guia para configuração local.
-5. Demonstração final:
-   - Rodar `bash run.sh` no root.
-   - Acessar `http://localhost:4200`.
-   - Mostrar funcionamento completo da jornada de estoque + faturamento.
-
-## Detalhe técnico a mencionar
-
-- O frontend foi organizado como uma aplicação moderna Angular, com rotas e componentes standalone para melhor manutenção.
-- A camada de serviços frontend centraliza chamadas HTTP e estado reativo para sincronizar produtos e notas.
-- A emissão de nota não apenas cria o documento, mas também atualiza o estoque via integração entre serviços.
-- O `.env.example` fornece o template de configuração sem expor dados sensíveis.

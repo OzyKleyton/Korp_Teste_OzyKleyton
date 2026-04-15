@@ -41,7 +41,10 @@ func (nh *NotaHandler) CreateNotaFiscalHandler(c *fiber.Ctx) error {
 }
 
 func (nh *NotaHandler) FindAllNotasHandler(c *fiber.Ctx) error {
-	res := nh.service.FindAllNotas()
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+
+	res := nh.service.FindAllNotas(page, limit)
 	return c.Status(res.Status).JSON(res)
 }
 

@@ -20,13 +20,15 @@
       <nav class="flex flex-wrap items-center gap-3">
         <a
           routerLink="/produtos"
-          routerLinkActive="bg-slate-900 text-white"
+          routerLinkActive="!bg-slate-900 !text-white"
+          [routerLinkActiveOptions]="{ exact: true }"
           class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-900 hover:text-white"
           >Estoque</a
         >
         <a
           routerLink="/notas"
-          routerLinkActive="bg-slate-900 text-white"
+          routerLinkActive="!bg-slate-900 !text-white"
+          [routerLinkActiveOptions]="{ exact: true }"
           class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-900 hover:text-white"
           >Notas Fiscais</a
         >

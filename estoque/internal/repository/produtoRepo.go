@@ -10,7 +10,7 @@ import (
 
 type ProdutoRepository interface {
 	Create(produto *produto.Produto) (*produto.Produto, error)
-	FindAll() ([]produto.Produto, error)
+	FindAll(page, limit int) ([]produto.Produto, int64, error)
 	FindByID(id uint) (produto *produto.Produto, err error)
 	Update(produto *produto.Produto) (*produto.Produto, error)
 	Delete(id uint) (produto *produto.Produto, err error)
@@ -35,12 +35,25 @@ func (p *ProdutoRepo) Create(produto *produto.Produto) (*produto.Produto, error)
 	return produto, nil
 }
 
-func (p *ProdutoRepo) FindAll() (produtos []produto.Produto, err error) {
-	if err := p.db.Find(&produtos).Error; err != nil {
-		return nil, err
+func (p *ProdutoRepo) FindAll(page, limit int) (produtos []produto.Produto, total int64, err error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	query := p.db.Model(&produto.Produto{})
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
 
-	return produtos, nil
+	if err := query.Limit(limit).Offset(offset).Find(&produtos).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return produtos, total, nil
 }
 
 func (p *ProdutoRepo) FindByID(id uint) (produto *produto.Produto, err error) {

@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { ApiService } from './api.service';
 import { Produto } from '../types/estoque';
+import { ApiService, PaginationResponse } from './api.service';
 import { ToastService } from './toast.service';
 
 @Injectable({
@@ -8,20 +8,47 @@ import { ToastService } from './toast.service';
 })
 export class ProdutoStoreService {
   produtos = signal<Produto[]>([]);
+  currentPage = signal(1);
+  totalItems = signal(0);
+  readonly pageSize = 5;
 
-  constructor(private api: ApiService, private toast: ToastService) {
+  constructor(
+    private api: ApiService,
+    private toast: ToastService,
+  ) {
     this.loadProdutos();
   }
 
-  loadProdutos() {
-    this.api.listProdutos().subscribe({
+  loadProdutos(page = 1) {
+    this.currentPage.set(page);
+    this.api.listProdutos(page, this.pageSize).subscribe({
       next: (response) => {
-        this.produtos.set(response.data ?? []);
+        const data = response.data as PaginationResponse<Produto>;
+        this.produtos.set(data?.items ?? []);
+        this.totalItems.set(data?.total_items ?? 0);
       },
       error: () => {
         this.toast.error('Não foi possível carregar os produtos do estoque.');
       },
     });
+  }
+
+  nextPage() {
+    const next = this.currentPage() + 1;
+    if (next <= this.totalPages) {
+      this.loadProdutos(next);
+    }
+  }
+
+  prevPage() {
+    const prev = this.currentPage() - 1;
+    if (prev >= 1) {
+      this.loadProdutos(prev);
+    }
+  }
+
+  get totalPages() {
+    return Math.max(1, Math.ceil(this.totalItems() / this.pageSize));
   }
 
   createProduto(produto: Omit<Produto, 'id'>) {

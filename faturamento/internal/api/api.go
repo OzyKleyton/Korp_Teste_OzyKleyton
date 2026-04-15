@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/OzyKleyton/Korp_Teste_Ozy/config"
@@ -17,6 +18,7 @@ import (
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/repository"
 	"github.com/OzyKleyton/Korp_Teste_Ozy/internal/service"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func Run(host, port string) error {
@@ -47,6 +49,10 @@ func Run(host, port string) error {
 		return err
 	}
 
+	if err := seedNotas(db, config.GetConfig().Environment); err != nil {
+		return err
+	}
+
 	notaRepo := repository.NewNotaFiscalRepository(db)
 
 	notaService := service.NewNotaFiscalService(notaRepo)
@@ -71,4 +77,19 @@ func Run(host, port string) error {
 	err = <-errc
 
 	return err
+}
+
+func seedNotas(db *gorm.DB, environment string) error {
+	env := strings.TrimSpace(strings.ToUpper(environment))
+	if env == "" || env == "DEVELOPMENT" || env == "DEV" {
+		log.Println("Dev seed: limpando notas fiscais existentes")
+		if err := db.Unscoped().Where("1 = 1").Delete(&nota.ItemNota{}).Error; err != nil {
+			return err
+		}
+		if err := db.Unscoped().Where("1 = 1").Delete(&nota.NotaFiscal{}).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
