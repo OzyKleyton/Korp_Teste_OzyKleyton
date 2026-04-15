@@ -65,7 +65,7 @@ import { ItemNota } from '../../types/notafiscal';
             >
               <div>
                 <div class="font-semibold text-slate-900">
-                  {{ lookupProduct(item.produto_id)?.codigo ?? '---' }}
+                  {{ lookupProduct(item.produto_id)?.descricao ?? '---' }}
                 </div>
                 <div class="text-sm text-slate-500">Quantidade: {{ item.quantidade }}</div>
               </div>
@@ -126,7 +126,7 @@ export class NotaFormComponent {
     }
 
     this.itens = [...this.itens, { ...this.currentItem }];
-    this.currentItem = { produto_id: this.produtos()[0]?.id ?? 0, quantidade: 1 };
+    this.currentItem = { produto_id: 0, quantidade: 1 };
     this.toast.success('Item adicionado à nota.');
   }
 

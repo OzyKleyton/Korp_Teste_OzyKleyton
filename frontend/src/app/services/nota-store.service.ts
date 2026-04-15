@@ -11,7 +11,7 @@ export class NotaStoreService {
   notas = signal<NotaFiscal[]>([]);
   currentPage = signal(1);
   totalItems = signal(0);
-  readonly pageSize = 5;
+  readonly pageSize = 4;
 
   constructor(
     private api: ApiService,
@@ -20,7 +20,7 @@ export class NotaStoreService {
     this.loadNotas();
   }
 
-  loadNotas(page = 1) {
+  loadNotas(page = this.currentPage()) {
     this.currentPage.set(page);
     this.api.listNotas(page, this.pageSize).subscribe({
       next: (response) => {

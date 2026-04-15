@@ -4,6 +4,7 @@ import { LoadingBarModule, LoadingBarService } from '@ngx-loading-bar/core';
 import { finalize } from 'rxjs/operators';
 
 import { NotaStoreService } from '../../services/nota-store.service';
+import { ProdutoStoreService } from '../../services/produto-store.service';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
@@ -101,6 +102,7 @@ export class NotaListComponent {
 
   constructor(
     public notaStore: NotaStoreService,
+    private produtoStore: ProdutoStoreService,
     private toast: ToastService,
     private loadingBar: LoadingBarService,
   ) {}
@@ -137,6 +139,7 @@ export class NotaListComponent {
         next: () => {
           this.toast.success('Nota impressa e estoque atualizado com sucesso.');
           this.notaStore.loadNotas();
+          this.produtoStore.loadProdutos();
         },
         error: () => {
           this.toast.error('Erro ao imprimir a nota. Verifique se o estoque tem saldo suficiente.');

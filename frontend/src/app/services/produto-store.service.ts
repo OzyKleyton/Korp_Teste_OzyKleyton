@@ -19,7 +19,7 @@ export class ProdutoStoreService {
     this.loadProdutos();
   }
 
-  loadProdutos(page = 1) {
+  loadProdutos(page = this.currentPage()) {
     this.currentPage.set(page);
     this.api.listProdutos(page, this.pageSize).subscribe({
       next: (response) => {
